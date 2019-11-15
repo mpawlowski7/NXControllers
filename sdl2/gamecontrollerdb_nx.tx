@@ -1,0 +1,4 @@
+# hid-nintendo SDL2 reverse Nintendo (A=A, B=B etc.) mappings
+050000007e0500000920000001800000,Nintendo Switch Pro Controller,platform:Linux,a:b1,b:b0,x:b2,y:b3,back:b9,guide:b11,start:b10,leftstick:b12,rightstick:b13,leftshoulder:b5,rightshoulder:b6,dpup:b14,dpdown:b15,dpleft:b16,dpright:b17,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:b7,righttrigger:b8,
+030000007e0500000920000011810000,Nintendo Switch Pro Controller,platform:Linux,a:b1,b:b0,x:b2,y:b3,back:b9,guide:b11,start:b10,leftstick:b12,rightstick:b13,leftshoulder:b5,rightshoulder:b6,dpup:b14,dpdown:b15,dpleft:b16,dpright:b17,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:b7,righttrigger:b8,
+060000007e0500000620000000000000,Nintendo Switch Combined Joy-Cons,platform:Linux,a:b1,b:b0,x:b2,y:b3,back:b9,guide:b11,start:b10,leftstick:b12,rightstick:b13,leftshoulder:b5,rightshoulder:b6,dpup:b14,dpdown:b15,dpleft:b16,dpright:b17,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:b7,righttrigger:b8,
