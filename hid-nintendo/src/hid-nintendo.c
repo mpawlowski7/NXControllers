@@ -503,53 +503,77 @@ static int joycon_send_subcmd(struct joycon_ctlr *ctlr,
 
 /* Looks for first empty slot and sets it */
 static DEFINE_MUTEX(joycon_input_num_mutex);
-static int joycon_reset_player_id(struct joycon_ctlr *ctlr) {
-
-	static u16 connected_ctlr = 0x0000;
-	hid_dbg(ctlr->hdev, "reset player led. connected controllers: 0x%X\n", connected_ctlr);
+static void joycon_reset_player_id(struct joycon_ctlr *ctlr) {
+//	static u16 connected_ctlr = 0x0000;
+	/* mark which controller is connected */
+	static u8 connected_flag = 0;
+	int i, j;
+	hid_dbg(ctlr->hdev, "starting reset player led. connected controllers: 0x%X\n", connected_flag);
 	mutex_lock(&joycon_input_num_mutex);
-	if (ctlr->player_id == 0x00) {
-		hid_dbg(ctlr->hdev, "connecting controller\n");
-		// find first empty slot
-		if (~connected_ctlr & 0x0001) {
-			ctlr->player_id = 0x01;
-			connected_ctlr |= 0x0001;
+
+	if (ctlr->player_id == 0x0) {
+		hid_dbg(ctlr->hdev, "connecting new controller\n");
+
+	    u8 current_pos = connected_flag;
+		/* find first empty slot */
+		for(i=1; i<=JC_NUM_LEDS; i++) {
+			if ( !(current_pos & 1)) {
+				ctlr->player_id = 0xF >> (JC_NUM_LEDS - i);
+				connected_flag |= 1 << (i-1);
+				break;
+			}
+			else 
+				current_pos >>= 1;
 		}
-		else if (~connected_ctlr & 0x0030) {
-			ctlr->player_id = 0x03;
-			connected_ctlr |= 0x0030;
-		}
-		else if (~connected_ctlr & 0x0700) {
-			ctlr->player_id = 0x07;
-			connected_ctlr |= 0x0700;
-		}
-		else if(~connected_ctlr & 0xF000) {
-		 	ctlr->player_id  = 0x0F;
-			connected_ctlr |= 0xF000;
-		}
+
+		// if (~connected_ctlr & 0x0001) {
+		// 	ctlr->player_id = 0x01;
+		// 	connected_ctlr |= 0x0001;
+		// }
+		// else if (~connected_ctlr & 0x0030) {
+		// 	ctlr->player_id = 0x03;
+		// 	connected_ctlr |= 0x0030;
+		// }
+		// else if (~connected_ctlr & 0x0700) {
+		// 	ctlr->player_id = 0x07;
+		// 	connected_ctlr |= 0x0700;
+		// }
+		// else if(~connected_ctlr & 0xF000) {
+		//  	ctlr->player_id  = 0x0F;
+		// 	connected_ctlr |= 0xF000;
+		// }
 	}
 	else {
-		hid_dbg(ctlr->hdev, "disconnecting controller\n");
-		switch(ctlr->player_id) {
-			case 0x01: {
-				connected_ctlr &= 0xFFF0;
-				break;
-			}
-			case 0x03: {
-				connected_ctlr &= 0xFF0F;
-				break;
-			}
-			case 0x07: {
-				connected_ctlr &= 0xF0FF;
-				break;
-			}
-			case 0x0F: {
-				connected_ctlr &= 0x0FFF;
+		hid_dbg(ctlr->hdev, "disconnecting controller with id 0x%X\n", ctlr->player_id);
+
+		for(j=1; j<=JC_NUM_LEDS; j++) {
+			if (ctlr->player_id == 0xF >> (JC_NUM_LEDS - j)) {
+				/* find slot corresponding to player ID and clear it */
+				connected_flag &= ~(1 << (j-1));
 				break;
 			}
 		}
+
+		// switch(ctlr->player_id) {
+		// 	case 0x01: {
+		// 		connected_ctlr &= 0xFFF0;
+		// 		break;
+		// 	}
+		// 	case 0x03: {
+		// 		connected_ctlr &= 0xFF0F;
+		// 		break;
+		// 	}
+		// 	case 0x07: {
+		// 		connected_ctlr &= 0xF0FF;
+		// 		break;
+		// 	}
+		// 	case 0x0F: {
+		// 		connected_ctlr &= 0x0FFF;
+		// 		break;
+		// 	}
+		// }
 	}
-	hid_dbg(ctlr->hdev, "end reset player led. connected controllers: 0x%X\n", connected_ctlr);
+	hid_dbg(ctlr->hdev, "finished reset player led. connected controllers: 0x%X\n", connected_flag);
 	mutex_unlock(&joycon_input_num_mutex);
 }
 
@@ -561,7 +585,7 @@ static int joycon_set_player_leds(struct joycon_ctlr *ctlr, u8 flash, u8 on)
 
 	req = (struct joycon_subcmd_request *)buffer;
 	req->subcmd_id = JC_SUBCMD_SET_PLAYER_LIGHTS;
-	req->data[0] = 0x10 | ctlr->player_id;
+	req->data[0] = 1 << 4 | ctlr->player_id;
 
 	hid_dbg(ctlr->hdev, "setting player leds\n");
 	return joycon_send_subcmd(ctlr, req, 1, HZ/4);
@@ -1152,6 +1176,8 @@ static int joycon_player_led_brightness_set(struct led_classdev *led,
 	int ret;
 	int num;
 
+	hid_dbg(hdev, "call joycon_player_led_brightness_set\n");
+
 	ctlr = hid_get_drvdata(hdev);
 	if (!ctlr) {
 		hid_err(hdev, "No controller data\n");
@@ -1278,7 +1304,7 @@ static int joycon_leds_create(struct joycon_ctlr *ctlr)
 			return ret;
 		}
 		/* Set the home LED to 0 as default state */
-		ret = joycon_home_led_brightness_set(led, 0);
+		ret = joycon_home_led_brightness_set(led, 1);
 		if (ret) {
 			hid_err(hdev, "Failed to set home LED dflt; ret=%d\n",
 									ret);
