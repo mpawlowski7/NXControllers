@@ -501,79 +501,31 @@ static int joycon_send_subcmd(struct joycon_ctlr *ctlr,
 	return ret;
 }
 
-/* Looks for first empty slot and sets it */
 static DEFINE_MUTEX(joycon_input_num_mutex);
 static void joycon_reset_player_id(struct joycon_ctlr *ctlr) {
-//	static u16 connected_ctlr = 0x0000;
-	/* mark which controller is connected */
-	static u8 connected_flag = 0;
-	int i, j;
-	hid_dbg(ctlr->hdev, "starting reset player led. connected controllers: 0x%X\n", connected_flag);
+	static u8 connected_ctlrs = 0;
+	u8 input_num = 0;
+	hid_dbg(ctlr->hdev, "Starting reset player led. Connected controllers: 0x%X\n", connected_ctlrs);
 	mutex_lock(&joycon_input_num_mutex);
-
 	if (ctlr->player_id == 0x0) {
-		hid_dbg(ctlr->hdev, "connecting new controller\n");
-
-	    u8 current_pos = connected_flag;
-		/* find first empty slot */
-		for(i=1; i<=JC_NUM_LEDS; i++) {
-			if ( !(current_pos & 1)) {
-				ctlr->player_id = 0xF >> (JC_NUM_LEDS - i);
-				connected_flag |= 1 << (i-1);
-				break;
-			}
-			else 
-				current_pos >>= 1;
-		}
-
-		// if (~connected_ctlr & 0x0001) {
-		// 	ctlr->player_id = 0x01;
-		// 	connected_ctlr |= 0x0001;
-		// }
-		// else if (~connected_ctlr & 0x0030) {
-		// 	ctlr->player_id = 0x03;
-		// 	connected_ctlr |= 0x0030;
-		// }
-		// else if (~connected_ctlr & 0x0700) {
-		// 	ctlr->player_id = 0x07;
-		// 	connected_ctlr |= 0x0700;
-		// }
-		// else if(~connected_ctlr & 0xF000) {
-		//  	ctlr->player_id  = 0x0F;
-		// 	connected_ctlr |= 0xF000;
-		// }
+		hid_dbg(ctlr->hdev, "Connecting new controller\n");
+		/* Looks for first empty slot and marks it as taken */
+        while (((connected_ctlrs >> input_num) & 1) && input_num < 4) {
+            ++input_num;
+        }
+        connected_ctlrs |= 1 << input_num; // mark slot as connected
+        ctlr->player_id = 0xF >> (4-(input_num+1)); // set player id
 	}
 	else {
-		hid_dbg(ctlr->hdev, "disconnecting controller with id 0x%X\n", ctlr->player_id);
-
-		for(j=1; j<=JC_NUM_LEDS; j++) {
-			if (ctlr->player_id == 0xF >> (JC_NUM_LEDS - j)) {
-				/* find slot corresponding to player ID and clear it */
-				connected_flag &= ~(1 << (j-1));
-				break;
-			}
-		}
-
-		// switch(ctlr->player_id) {
-		// 	case 0x01: {
-		// 		connected_ctlr &= 0xFFF0;
-		// 		break;
-		// 	}
-		// 	case 0x03: {
-		// 		connected_ctlr &= 0xFF0F;
-		// 		break;
-		// 	}
-		// 	case 0x07: {
-		// 		connected_ctlr &= 0xF0FF;
-		// 		break;
-		// 	}
-		// 	case 0x0F: {
-		// 		connected_ctlr &= 0x0FFF;
-		// 		break;
-		// 	}
-		// }
+		hid_dbg(ctlr->hdev, "Disconnecting controller with id 0x%X\n", ctlr->player_id);
+        /* find corresponding slot to given player id*/
+        while((ctlr->player_id != 0xF >> (4-(input_num+1))) && input_num < 4) {
+            ++input_num;
+        }
+        /* clear slot */
+        connected_ctlrs &= ~(1 << input_num);
 	}
-	hid_dbg(ctlr->hdev, "finished reset player led. connected controllers: 0x%X\n", connected_flag);
+	hid_dbg(ctlr->hdev, "Finished reset player led. connected controllers: 0x%X\n", connected_ctlrs);
 	mutex_unlock(&joycon_input_num_mutex);
 }
 
