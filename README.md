@@ -15,16 +15,16 @@ For dual joycon support as one controller you are going to need: https://github.
 * `cd nxcontrollers`
 * `sudo ./install.sh`
 
-### Usage
+## Usage
 * Load module `sudo modprobe hid_nintendo` (or reboot)
 * Connect controller via USB or Bluetooth,
 * Verify that driver is loaded `lsmod | grep 'hid_nintendo'`
 
-### Update
+## Update
 * `git pull`
 * `sudo ./update.sh`
 
-### Uninstallation
+## Uninstallation
 * Run `sudo ./uninstall.sh` to remove all installed versions of hid-nintendo.
 
 ## Using in Lutris
