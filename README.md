@@ -28,4 +28,4 @@ For dual joycon support as one controller you are going to need: https://github.
 * Run `sudo ./uninstall.sh` to remove all installed versions of hid-nintendo.
 
 ## Using in Lutris
-To use it in Lutris copy paste in `System options > Show advanced options > SDL2 gamepad mapping` path to `sdl2/gamecontrollerdb.txt` or `sdl2/gamecontrollerdb_nx.txt` for reverse Nintendo-like button order into
+To use it in Lutris copy paste path to **sdl2/gamecontrollerdb.txt** or **sdl2/gamecontrollerdb_nx.txt(for reverse Nintendo-like button order)** into **System options > Show advanced options > SDL2 gamepad mapping**
