@@ -1,3 +1,0 @@
-#!/bin/sh
-echo "Removing udev rules."
-rm /etc/udev/rules.d/99-nintendo-switch-controllers.rules

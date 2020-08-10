@@ -1,4 +1,0 @@
-#!/bin/sh
-echo "Applying udev rules."
-cp ./udev/99-nintendo-switch-controllers.rules /etc/udev/rules.d/
-udevadm control --reload

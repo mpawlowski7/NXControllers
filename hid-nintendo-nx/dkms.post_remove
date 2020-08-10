@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "Removing udev rules."
+rm /etc/udev/rules.d/80-nintendo-nx-controllers.rules
